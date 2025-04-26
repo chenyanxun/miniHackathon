@@ -10,7 +10,6 @@ export function useWalrusBlob() {
     try {
       const formData = new FormData();
       formData.append("file", File);
-
       const response = await fetch("/api/writeBlob", {
         method: "POST",
         body: formData,
