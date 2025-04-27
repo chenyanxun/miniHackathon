@@ -6,9 +6,9 @@ const { networkConfig, useNetworkVariable, useNetworkVariables } =
     testnet: {
       url: getFullnodeUrl("testnet"),
       variables: {
-        packageID: "0x33128e647d04bc5e0e29bfd313487e1e4bbae19789fb9e5d7155f8b723d46860",
+        packageID: "0x2b5a2d26bdb21a94a4577f4590f742b886befc0ce586a6594260919ccfef57a4",
         module: "hackathon_qidian",
-        stateID: "0x36100b74c184cde455697571bd0b21da7042214f3f12d5f55c0d765cf71e513e",
+        stateID: "0x84678d6920e4ab09a08e9cdbd81020139c55328ca9c50d3c4acd53cd962d685a",
       },
     },
     devnet: {

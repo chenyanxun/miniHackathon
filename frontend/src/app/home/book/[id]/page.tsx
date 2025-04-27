@@ -3,7 +3,7 @@ import { suiClient, useNetworkVariables } from "@/app/networkconfig";
 import ChapterCard from "@/components/ChapterCard";
 import { Button } from "@/components/ui/button";
 import { queryChapters } from "@/contracts";
-import { useWalrusBlob } from "@/hooks/useWalrusBlob";
+import { UploadedBlobInfo, useWalrusBlob } from "@/hooks/useWalrusBlob";
 import { IChapter, IVaribales } from "@/type";
 import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
@@ -18,9 +18,10 @@ function Book() {
   const book = searchParams.get("book");
   const description = searchParams.get("description");
   const avatar = searchParams.get("avatar");
-  const { writeFileToWalrus } = useWalrusBlob();
+  const { writeFileToWalrus, writeFileToWalrusWithSeal } = useWalrusBlob();
   const [showModal, setShowModal] = useState(false);
   const [title, setTitle] = useState("");
+  const [price, setPrice] = useState(0);
   const [chapterFile, setChapterFile] = useState<File | null>(null);
   const { packageID, module } = useNetworkVariables() as IVaribales;
   const [chapters, setChapters] = useState<IChapter[]>([]);
@@ -37,7 +38,7 @@ function Book() {
     router.push(
       `/home/book/chapter/${chapter.id}?chapter=${encodeURIComponent(
         chapter.title
-      )}&blobId=${chapter.content}`
+      )}&blobId=${chapter.content}&amount=${chapter.amount}&encryptId=${id}`
     );
   };
   const submitEvent = async () => {
@@ -49,9 +50,15 @@ function Book() {
       alert("Please upload a cover image");
       return;
     }
-
-    const blobInfo = await writeFileToWalrus(chapterFile);
-    console.log("blobInfo====", blobInfo);
+    let blobInfo: UploadedBlobInfo | undefined;
+    if(price === 0) {
+      blobInfo = await writeFileToWalrus(chapterFile);
+      console.log("blobInfo====不加密", blobInfo);
+    }else {
+      blobInfo = await writeFileToWalrusWithSeal(chapterFile, packageID, id as string)
+      console.log("blobInfo====加密", blobInfo);
+    }
+    
     const tx = new Transaction();
     tx.moveCall({
       package: packageID,
@@ -61,6 +68,7 @@ function Book() {
         tx.object(id as string),
         tx.pure.string(title),
         tx.pure.string(blobInfo!.blobId),
+        tx.pure.u64(price)
       ],
     });
     signAndExecute(
@@ -85,7 +93,6 @@ function Book() {
         },
       }
     );
-
     setShowModal(false);
   };
   return (
@@ -137,13 +144,24 @@ function Book() {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Price (MIST)</label>
+                <input
+                  type="number"
+                  min={0}
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="Enter book title"
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">
                   Upload Chapter (TXT File)
                 </label>
                 <input
                   type="file"
                   className="w-full border rounded px-3 py-2"
-                  accept=".txt"
+                  accept=""
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
                     setChapterFile(file);

@@ -85,6 +85,7 @@ export const queryChapters = async (id: string) => {
         id: { id: string };
         title: string;
         owner: string;
+        amount: string;
         content: string;
       };
     };
@@ -92,6 +93,7 @@ export const queryChapters = async (id: string) => {
       id: chapter_detail.fields?.id.id,
       title: chapter_detail.fields?.title,
       owner: chapter_detail.fields?.owner,
+      amount: chapter_detail.fields.amount,
       content: chapter_detail.fields?.content,
     };
   });

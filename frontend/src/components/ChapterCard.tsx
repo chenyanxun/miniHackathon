@@ -15,6 +15,7 @@ export default function CharterCard({
               onClick={() => goToChapterDetail(chapter)}
             >
               <span className="text-lg">{chapter.title}</span>
+              <span>{chapter.amount} MIST</span>
             </div>
           );
         })}

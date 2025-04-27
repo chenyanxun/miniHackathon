@@ -15,6 +15,7 @@ export interface IChapter {
   id: string;
   title: string;
   owner: string;
+  amount: string;
   content: string;
 }
 
