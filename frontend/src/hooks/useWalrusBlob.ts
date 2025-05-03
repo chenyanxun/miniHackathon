@@ -1,3 +1,5 @@
+import { sealClient } from "@/app/networkconfig";
+import { useToast } from "./useToast";
 export interface UploadedBlobInfo {
   blobId: string;
   endEpoch: number;
@@ -6,10 +8,11 @@ export interface UploadedBlobInfo {
 }
 
 export function useWalrusBlob() {
+  const { errorToast } = useToast();
   /**
    * 不加密
-   * @param File 
-   * @returns 
+   * @param File
+   * @returns
    */
   const writeFileToWalrus = async (File: File) => {
     try {
@@ -21,7 +24,7 @@ export function useWalrusBlob() {
       });
 
       if (!response.ok) {
-        console.error("Failed to fetch blob data");
+        errorToast("Failed to fetch blob data");
         return;
       }
       const result = await response.json();
@@ -44,38 +47,46 @@ export function useWalrusBlob() {
           suiRef: data.newlyCreated.blobObject.id,
         };
       } else {
+        errorToast("Unexpected response format");
         throw new Error("Unexpected response format");
       }
       return blobInfo;
     } catch (error) {
-      console.error("Error in storeBlob:", error);
+      errorToast("Error in storeBlob");
       throw error;
     }
   };
   /**
    * 用seal加密
-   * @param File 
-   * @returns 
+   * @param File
+   * @returns
    */
-  const writeFileToWalrusWithSeal = async (File: File, packageId: string, encryptId: string) => {
+  const writeFileToWalrusWithSeal = async (
+    File: File,
+    packageId: string,
+    encryptId: string
+  ) => {
     try {
-      const formData = new FormData();
-      formData.append("file", File);
-      formData.append("packageId", packageId);
-      formData.append("encryptId", encryptId);
-      const response = await fetch("/api/writeBlob", {
-        method: "POST",
-        body: formData,
+      const encryptedData = new Uint8Array(await File.arrayBuffer());
+      const { encryptedObject: encryptedBytes } = await sealClient.encrypt({
+        threshold: 2,
+        packageId,
+        id: encryptId,
+        data: encryptedData,
       });
-
+      const base64Data = Buffer.from(encryptedBytes).toString("base64");
+      const response = await fetch(
+        `/api/writeBlobWithSeal?data=${encodeURIComponent(base64Data)}`
+      );
+      console.log("===response", response);
       if (!response.ok) {
-        console.error("Failed to fetch blob data");
+        errorToast("Failed to fetch blob data");
         return;
       }
       const result = await response.json();
+      console.log("result===", result);
       const data = result.data;
       console.log("Blob data:", data);
-
       let blobInfo: UploadedBlobInfo;
       if ("alreadyCertified" in data) {
         blobInfo = {
@@ -92,16 +103,17 @@ export function useWalrusBlob() {
           suiRef: data.newlyCreated.blobObject.id,
         };
       } else {
+        errorToast("Unexpected response format");
         throw new Error("Unexpected response format");
       }
       return blobInfo;
     } catch (error) {
-      console.error("Error in storeBlob:", error);
+      errorToast("Error in storeBlob");
       throw error;
     }
   };
   return {
     writeFileToWalrus,
-    writeFileToWalrusWithSeal
+    writeFileToWalrusWithSeal,
   };
 }

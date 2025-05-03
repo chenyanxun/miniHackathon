@@ -14,9 +14,9 @@ export async function POST(req: Request) {
   try {
     const encryptedData = await file
       .arrayBuffer()
-      .then((buffer: any) => new Uint8Array(buffer));
+      .then((buffer: ArrayBuffer) => new Uint8Array(buffer));
     const result = await fetch(
-      "https://publisher.walrus-testnet.walrus.space/v1/blobs?epochs=5",
+      "https://publisher.testnet.walrus.atalma.io/v1/blobs?epochs=5",
       {
         method: "PUT",
         body: encryptedData,
