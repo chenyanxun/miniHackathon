@@ -42,24 +42,31 @@ function Chapter() {
         );
         const data = await result.text();
         setContent(data);
+        setIsPay(true);
       }
     } else {
       // 加密
-      getTxtContent();
+      if(chapterDetail.content) {
+        getTxtContent();
+      }
     }
   }, [chapterDetail]);
 
-  const constructTxBytes = async () => {
-    const tx = new Transaction();
-    tx.moveCall({
-      target: `${packageID}::${module}::seal_approve`,
-      arguments: [tx.pure.vector("u8", fromHex(chapterDetail.book))],
-    });
-    return await tx.build({ client: suiClient, onlyTransactionKind: true });
+  const constructTxBytes = async (tx: Transaction) => {
+    try{
+      tx.moveCall({
+        target: `${packageID}::${module}::seal_approve`,
+        arguments: [tx.pure.vector("u8", fromHex(chapterDetail.book))],
+      });
+      return await tx.build({ client: suiClient, onlyTransactionKind: true });
+    }catch(err) {
+      console.log("==err", err)
+    }
   };
   // 解密
   const getTxtContent = async () => {
-    const txBytes = await constructTxBytes();
+    const tx = new Transaction();
+    const txBytes = await constructTxBytes(tx);
     const sessionKey = new SessionKey({
       address: currentAccount?.address ?? "",
       packageId: packageID,

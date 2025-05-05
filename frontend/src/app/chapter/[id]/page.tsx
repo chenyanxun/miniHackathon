@@ -122,8 +122,7 @@ function Chapter() {
       }
     );
   };
-  const constructTxBytes = async () => {
-    const tx = new Transaction();
+  const constructTxBytes = async (tx: Transaction) => {
     tx.moveCall({
       target: `${packageID}::${module}::seal_approve`,
       arguments: [tx.pure.vector("u8", fromHex(chapterDetail.book))],
@@ -132,7 +131,8 @@ function Chapter() {
   };
   // 解密
   const getTxtContent = async () => {
-    const txBytes = await constructTxBytes();
+    const tx = new Transaction();
+    const txBytes = await constructTxBytes(tx);
     const sessionKey = new SessionKey({
       address: currentAccount?.address ?? "",
       packageId: packageID,
@@ -202,8 +202,8 @@ function Chapter() {
       {isPay ? (
         getContent()
       ) : (
-        <Button variant="default" onClick={payEvent}>
-          充值 {chapterDetail.amount}MIST
+        <Button variant="default" className="cursor-pointer" onClick={payEvent}>
+          Pay {chapterDetail.amount}MIST
         </Button>
       )}
     </div>
