@@ -31,7 +31,7 @@ export type PartialZkLoginSignature = Omit<
   Parameters<typeof getZkLoginSignature>["0"]["inputs"],
   "addressSeed"
 >;
-function Header() {
+export default function ZKHeader() {
   // 临时密钥对
   const [ephemeralKeyPair, setEphemeralKeyPair] = useState<Ed25519Keypair>();
   // maxEpoch 期限
@@ -271,7 +271,7 @@ function Header() {
     tx.setSender(address as string);
     const { bytes, signature: userSignature } = await tx.sign({
       client: suiClient,
-      signer: ephemeralKeyPair as any,
+      signer: ephemeralKeyPair as Ed25519Keypair,
     });
 
     const addressSeed: string = genAddressSeed(
@@ -283,7 +283,7 @@ function Header() {
         : decodedJwt?.aud?.[0] ?? ""
     ).toString();
 
-    const zkLoginSignature: any = getZkLoginSignature({
+    const zkLoginSignature: ReturnType<typeof getZkLoginSignature> = getZkLoginSignature({
       inputs: {
         proofPoints: zkProof?.proofPoints || { a: [], b: [[]], c: [] },
         issBase64Details: zkProof?.issBase64Details || { iss: "", details: "" },
@@ -338,4 +338,3 @@ function Header() {
   );
 }
 
-export default Header;
