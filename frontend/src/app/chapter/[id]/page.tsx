@@ -30,6 +30,7 @@ function Chapter() {
     {} as IChapterAllowlist
   );
   const [content, setContent] = useState("");
+  const [showWattingModal, setShowWattingModal] = useState(false);
   const currentAccount = useCurrentAccount();
   const params = useParams();
   const { errorToast } = useToast();
@@ -84,6 +85,7 @@ function Chapter() {
       errorToast("Current account is null");
       return;
     }
+    setShowWattingModal(true)
     const balance = await queryBalance(currentAccount.address);
     if (Number(balance.totalBalance) < Number(chapterDetail.amount)) {
       errorToast("coin is not enough");
@@ -112,22 +114,28 @@ function Chapter() {
             });
             if (result.effects?.status.status === "success") {
               getTxtContent();
+              setShowWattingModal(false)
               console.log("Transaction success:", result);
             }
           }
         },
         onError: (err) => {
           console.log(err);
+          setShowWattingModal(false)
         },
       }
     );
   };
   const constructTxBytes = async (tx: Transaction) => {
-    tx.moveCall({
-      target: `${packageID}::${module}::seal_approve`,
-      arguments: [tx.pure.vector("u8", fromHex(chapterDetail.book))],
-    });
-    return await tx.build({ client: suiClient, onlyTransactionKind: true });
+    try {
+      tx.moveCall({
+        target: `${packageID}::${module}::seal_approve`,
+        arguments: [tx.pure.vector("u8", fromHex(chapterDetail.book))],
+      });
+      return await tx.build({ client: suiClient, onlyTransactionKind: true });
+    }catch(err) {
+      console.log("err===", err)
+    }
   };
   // 解密
   const getTxtContent = async () => {
@@ -205,6 +213,33 @@ function Chapter() {
         <Button variant="default" className="cursor-pointer" onClick={payEvent}>
           Pay {chapterDetail.amount}MIST
         </Button>
+      )}
+      {showWattingModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.1)]">
+          <div className="p-6 rounded-lg w-96 flex flex-col items-center">
+            <svg
+              className="animate-spin h-8 w-8 text-blue-500 mb-4"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              ></path>
+            </svg>
+            <h2 className="text-lg font-bold mb-2">Processing...</h2>
+          </div>
+        </div>
       )}
     </div>
   );

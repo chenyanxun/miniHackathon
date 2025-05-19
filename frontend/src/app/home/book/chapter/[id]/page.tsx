@@ -6,7 +6,7 @@ import {
 } from "@/app/networkconfig";
 import { queryChapterDetail } from "@/contracts";
 import { IChapter, IVaribales } from "@/type";
-import { useCurrentAccount, useSignPersonalMessage } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSignAndExecuteTransaction, useSignPersonalMessage } from "@mysten/dapp-kit";
 import { SessionKey } from "@mysten/seal";
 import { Transaction } from "@mysten/sui/transactions";
 import { fromHex } from "@mysten/sui/utils";
@@ -22,6 +22,7 @@ function Chapter() {
   const { id } = params; // 获取动态路由参数
   const { packageID, module } = useNetworkVariables() as IVaribales;
   const { mutate: signPersonalMessage } = useSignPersonalMessage();
+   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
   useEffect(() => {
     if (typeof id === "string") {
       getChapterDetail(id);
@@ -98,14 +99,7 @@ function Chapter() {
             setContent(textContent);
             setIsPay(true);
           } catch (err) {
-            if (
-              err instanceof TypeError &&
-              err.message.includes("Unknown value")
-            ) {
-              console.error("Unsupported encryption type:", err);
-            } else {
-              console.error("Decryption error:", err);
-            }
+            console.log("==err", err)
           }
         },
       }
