@@ -6,7 +6,7 @@ import {
 } from "@/app/networkconfig";
 import { queryChapterDetail } from "@/contracts";
 import { IChapter, IVaribales } from "@/type";
-import { useCurrentAccount, useSignAndExecuteTransaction, useSignPersonalMessage } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSignPersonalMessage } from "@mysten/dapp-kit";
 import { SessionKey } from "@mysten/seal";
 import { Transaction } from "@mysten/sui/transactions";
 import { fromHex } from "@mysten/sui/utils";
@@ -22,7 +22,6 @@ function Chapter() {
   const { id } = params; // 获取动态路由参数
   const { packageID, module } = useNetworkVariables() as IVaribales;
   const { mutate: signPersonalMessage } = useSignPersonalMessage();
-   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
   useEffect(() => {
     if (typeof id === "string") {
       getChapterDetail(id);
@@ -74,7 +73,7 @@ function Chapter() {
       ttlMin: 10,
     });
     const result = await fetch(
-      `/api/readBlobWithSeal/${chapterDetail.content}`
+      `/api/readBlobWithSeal?id=${chapterDetail.content}`
     );
     if (!result.ok) {
       throw new Error("Network response was not ok");
@@ -86,9 +85,13 @@ function Chapter() {
         message: sessionKey.getPersonalMessage(),
       },
       {
-        onSuccess: async (res) => {
+        onSuccess: async (res: { signature: string; }) => {
           sessionKey.setPersonalMessageSignature(res.signature);
           try {
+            if (!txBytes) {
+              console.error("txBytes is undefined, cannot decrypt.");
+              return;
+            }
             const decryptedFile = await sealClient.decrypt({
               data: dataBuffer,
               sessionKey,

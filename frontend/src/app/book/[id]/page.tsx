@@ -16,7 +16,7 @@ export default function Book() {
   const [chapters, setChapters] = useState<IChapter[]>([]);
   useEffect(() => {
     fetchData();
-  }, []);
+  },[]);
   async function fetchData() {
     const chapters = await queryChapters(id as string);
     setChapters([...chapters]);

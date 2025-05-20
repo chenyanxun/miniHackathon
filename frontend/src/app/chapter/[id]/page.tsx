@@ -106,7 +106,7 @@ function Chapter() {
         transaction: tx,
       },
       {
-        onSuccess: async (res) => {
+        onSuccess: async (res: { digest: any; }) => {
           if (res.digest) {
             const result = await suiClient.waitForTransaction({
               digest: res.digest,
@@ -119,7 +119,7 @@ function Chapter() {
             }
           }
         },
-        onError: (err) => {
+        onError: (err: any) => {
           console.log(err);
           setShowWattingModal(false)
         },
@@ -159,9 +159,12 @@ function Chapter() {
         message: sessionKey.getPersonalMessage(),
       },
       {
-        onSuccess: async (res) => {
+        onSuccess: async (res: { signature: string; }) => {
           sessionKey.setPersonalMessageSignature(res.signature);
           try {
+            if (!txBytes) {
+              throw new Error("Transaction bytes are undefined");
+            }
             const decryptedFile = await sealClient.decrypt({
               data: dataBuffer,
               sessionKey,
